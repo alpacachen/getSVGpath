@@ -25,6 +25,8 @@ opt =
         //   baseWidth:Number
         // }
         path2string(res.data)
+        // you will get data like 
+        // M100 68.5 L100.5 68.5 L100.5 68.5 L101 68.5 L112.5 68 L120 67.5 L128 67 L138 67 L144 66.5 L154 66 L159 66 L171 66         // L179.5 65.5 L189.5 65.5 L152 57.5 
         svgPath = null;
     }
 }
