@@ -5,10 +5,12 @@
 
 ###### Usage
 npm i svgpath_2
+
 import SVGpath, { path2string } from 'svgpath_2'
+
 ```
-let svgPath = new svgpath_2(opt)
-svgpath_2.draw()
+let svgPath = new SVGpath(opt)
+svgPath.draw()
 ```
 ```
 opt =
