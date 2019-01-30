@@ -1,7 +1,7 @@
 ###### a plugin that you can get SVG path data by drawing in a canvas board
 
 ###### demo
-!['lalal'](http://b00.cdn.ipalfish.com/0/img/12/8b/7d9381a1a304a13d1e2048606afc)
+!['lalal'](http://b00.cdn.ipalfish.com/0/img/af/3a/653ca5f5afc1413efb0c3a100179)
 
 ###### Usage
 npm i svgpath_2

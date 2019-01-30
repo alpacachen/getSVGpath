@@ -1,4 +1,4 @@
-import SVGpath, { path2string } from 'svgpath_2'
+import SVGpath, { path2string } from '../index'
 const { x, y, width, height } = document.getElementById('inner').getBoundingClientRect()
 let svg = new SVGpath({
     x,
