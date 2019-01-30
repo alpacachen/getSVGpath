@@ -9,10 +9,10 @@ class SVGpath {
         this.opacity = opt.opacity || 0.8;
         this.path = [];
         this.onSure = opt.onSure;
-        this.canvas = null
-        this.ctx = null
-        this.div = null
-        this.mode = 'free'
+        this.canvas = null;
+        this.ctx = null;
+        this.div = null;
+        this.mode = 'free';
         // SVGpath.instance = this
         // }
         // return SVGpath.instance
@@ -24,8 +24,8 @@ class SVGpath {
     //     return this.instance
     // }
     draw() {
-        this.render()
-        this.mode_free()
+        this.render();
+        this.mode_free();
     }
     render() {
         this.div = document.createElement('div');
@@ -35,18 +35,18 @@ class SVGpath {
             }px;box-shadow: 0 0 10px #000;background: #fff;opacity:${this.opacity};border-radius: 4px;z-index: 1;">
                 <canvas id="SVGpath_Canvas" width=${this.width} height=${this.height}></canvas>
                 <div style="text-align: right;position: relative;top: -28px;padding: 0 8px;">
-                    <button id="SVGpath_cancel">取消</button>
-                    <button id="SVGpath_sure">确定</button>
+                    <button id="SVGpath_cancel">cancel</button>
+                    <button id="SVGpath_sure">sure</button>
                 </div>
-                <div style="text-align: right;position: relative;top: -28px;padding: 0 8px;">
-                    <button id="SVGpath_free">自由模式</button>
-                    <button id="SVGpath_line">连线模式</button>
+                <div style="top: -28px;position: absolute;top: -12px;right: 0;">
+                    <button id="SVGpath_free">free mode</button>
+                    <button id="SVGpath_line">line mode</button>
                 </div>
             </div>
         `;
         document.body.appendChild(this.div);
         this.canvas = document.getElementById('SVGpath_Canvas');
-        this.ctx = this.canvas.getContext('2d')
+        this.ctx = this.canvas.getContext('2d');
         document.getElementById('SVGpath_sure').onclick = () => {
             this.onSure({ data: this.path, baseWidth: this.width });
             document.body.removeChild(this.div);
@@ -55,14 +55,14 @@ class SVGpath {
             document.body.removeChild(this.div);
         };
         document.getElementById('SVGpath_free').onclick = () => {
-            this.cmode('free')
-            this.clear()
-            this.mode_free()
+            this.cmode('free');
+            this.clear();
+            this.mode_free();
         };
         document.getElementById('SVGpath_line').onclick = () => {
-            this.cmode('line')
-            this.clear()
-            this.mode_line()
+            this.cmode('line');
+            this.clear();
+            this.mode_line();
         };
     }
     mode_line() {
@@ -70,35 +70,35 @@ class SVGpath {
         let lastX = null;
         let lastY = null;
         const draw_lines = () => {
-            this.ctx.beginPath()
+            this.ctx.beginPath();
             for (let i = 0; i < this.path.length; i++) {
-                this.ctx.fillStyle = "red";
-                this.ctx.arc(this.path[i][0], this.path[i][1], 5, 0, 2 * Math.PI)
-                this.fillStyle = 'orange'
-                this.ctx.fill()
-                this.ctx.moveTo(this.path[i][0], this.path[i][1])
-                if (this.path[i + 1]) this.ctx.lineTo(this.path[i + 1][0], this.path[i + 1][1])
-                this.ctx.stroke()
+                this.ctx.fillStyle = 'red';
+                this.ctx.arc(this.path[i][0], this.path[i][1], 5, 0, 2 * Math.PI);
+                this.fillStyle = 'orange';
+                this.ctx.fill();
+                this.ctx.moveTo(this.path[i][0], this.path[i][1]);
+                if (this.path[i + 1]) this.ctx.lineTo(this.path[i + 1][0], this.path[i + 1][1]);
+                this.ctx.stroke();
             }
-        }
+        };
         this.canvas.onmousedown = e => {
-            this.ctx.beginPath()
-            this.ctx.arc(e.offsetX, e.offsetY, 5, 0, 2 * Math.PI)
-            this.ctx.fillStyle = "orange";
+            this.ctx.beginPath();
+            this.ctx.arc(e.offsetX, e.offsetY, 5, 0, 2 * Math.PI);
+            this.ctx.fillStyle = 'orange';
             this.ctx.fill();
             this.ctx.moveTo(e.offsetX, e.offsetY);
             this.ctx.stroke();
             [lastX, lastY] = [e.offsetX, e.offsetY];
             this.path.push([e.offsetX, e.offsetY]);
-        }
+        };
         this.canvas.onmousemove = e => {
-            if (lastX === null || lastY === null) return
-            draw_lines()
-            this.ctx.clearRect(0, 0, this.width, this.height)
-            this.ctx.moveTo(lastX, lastY)
-            this.ctx.lineTo(e.offsetX, e.offsetY)
-            this.ctx.stroke()
-        }
+            if (lastX === null || lastY === null) return;
+            draw_lines();
+            this.ctx.clearRect(0, 0, this.width, this.height);
+            this.ctx.moveTo(lastX, lastY);
+            this.ctx.lineTo(e.offsetX, e.offsetY);
+            this.ctx.stroke();
+        };
     }
     mode_free() {
         this.path = [];
@@ -122,21 +122,21 @@ class SVGpath {
             isDrawing = true;
             [lastX, lastY] = [e.offsetX, e.offsetY];
             this.path.push([e.offsetX, e.offsetY]);
-        }
-        this.canvas.onmousemove = throttle(drawLine, 50, 60)
-        this.canvas.onmouseup = () => (isDrawing = false)
-        this.canvas.mouseout = () => (isDrawing = false)
+        };
+        this.canvas.onmousemove = throttle(drawLine, 50, 60);
+        this.canvas.onmouseup = () => (isDrawing = false);
+        this.canvas.mouseout = () => (isDrawing = false);
     }
     clear() {
-        this.path = []
-        this.ctx.clearRect(0, 0, this.width, this.height)
-        this.canvas.onmousedown = null
-        this.canvas.onmousemove = null
-        this.canvas.onmouseup = null
-        this.canvas.mouseout = null
+        this.path = [];
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        this.canvas.onmousedown = null;
+        this.canvas.onmousemove = null;
+        this.canvas.onmouseup = null;
+        this.canvas.mouseout = null;
     }
     cmode(mode) {
-        this.mode = mode
+        this.mode = mode;
     }
 }
 
