@@ -1,6 +1,5 @@
 class SVGpath {
     constructor(opt) {
-        // if (!SVGpath.instance) {    目前不需要单例模式
         this.x = opt.x;
         this.y = opt.y;
         this.lineWidth = opt.lineWidth;
@@ -13,16 +12,7 @@ class SVGpath {
         this.ctx = null;
         this.div = null;
         this.mode = 'free';
-        // SVGpath.instance = this
-        // }
-        // return SVGpath.instance
     }
-    // static getInstance(opt) {
-    //     if (!this.instance) {
-    //         this.instance = new SVGpath(opt)
-    //     }
-    //     return this.instance
-    // }
     draw() {
         this.render();
         this.mode_free();
@@ -67,38 +57,67 @@ class SVGpath {
     }
     mode_line() {
         this.path = [];
-        let lastX = null;
-        let lastY = null;
+        let q_path = []
+        let isDrawing_idx = null
+        this.ctx.lineWidth = 3;
+        const findq = (x, y) => {
+            let idx = null
+            q_path.forEach((item, index) => {
+                const ix = item[0]
+                const iy = item[1]
+                if (x < ix + 5 && x > ix - 5 && y < iy + 5 && y > iy - 5) {
+                    idx = index
+                }
+            })
+            return idx
+        }
         const draw_lines = () => {
             this.ctx.beginPath();
             for (let i = 0; i < this.path.length; i++) {
-                this.ctx.fillStyle = 'red';
-                this.ctx.arc(this.path[i][0], this.path[i][1], 5, 0, 2 * Math.PI);
-                this.fillStyle = 'orange';
-                this.ctx.fill();
+                //原点
+                this.add_arc(this.path[i][0], this.path[i][1], 5, 0, 2 * Math.PI, false, 'orange')
                 this.ctx.moveTo(this.path[i][0], this.path[i][1]);
-                if (this.path[i + 1]) this.ctx.lineTo(this.path[i + 1][0], this.path[i + 1][1]);
-                this.ctx.stroke();
+                if (this.path[i + 1]) {
+                    let qx = q_path[i][0]
+                    let qy = q_path[i][1]
+                    this.ctx.quadraticCurveTo(qx, qy, this.path[i + 1][0], this.path[i + 1][1]);
+                    this.ctx.stroke();
+                    //中点
+                    this.add_arc(qx, qy, 5, 0, 2 * Math.PI, false, 'gray')
+                }
             }
         };
         this.canvas.onmousedown = e => {
-            this.ctx.beginPath();
-            this.ctx.arc(e.offsetX, e.offsetY, 5, 0, 2 * Math.PI);
-            this.ctx.fillStyle = 'orange';
-            this.ctx.fill();
-            this.ctx.moveTo(e.offsetX, e.offsetY);
-            this.ctx.stroke();
-            [lastX, lastY] = [e.offsetX, e.offsetY];
+            const inq = findq(e.offsetX, e.offsetY)
+            if (inq !== null) {
+                isDrawing_idx = inq
+                return
+            }
+            // [lastX, lastY] = [e.offsetX, e.offsetY];
             this.path.push([e.offsetX, e.offsetY]);
+            if (this.path.length > 1) {
+                let len = this.path.length
+                let qx = (e.offsetX + this.path[len - 2][0]) / 2
+                let qy = (e.offsetY + this.path[len - 2][1]) / 2
+                q_path.push([qx, qy])
+            }
+            draw_lines()
         };
-        this.canvas.onmousemove = e => {
-            if (lastX === null || lastY === null) return;
-            draw_lines();
-            this.ctx.clearRect(0, 0, this.width, this.height);
-            this.ctx.moveTo(lastX, lastY);
-            this.ctx.lineTo(e.offsetX, e.offsetY);
-            this.ctx.stroke();
-        };
+        this.canvas.onmousemove = throttle(e => {
+            const idx = findq(e.offsetX, e.offsetY) // 判断鼠标在哪个中点上
+            if (idx !== null) {
+                document.body.style.cursor = 'pointer'
+            } else {
+                document.body.style.cursor = 'default'
+            }
+            if (isDrawing_idx !== null) {
+                q_path.splice(isDrawing_idx, 1, [e.offsetX, e.offsetY])
+                this.ctx.clearRect(0,0,this.width,this.height)
+                draw_lines()
+            }
+        }, 70, 80)
+        this.canvas.onmouseup = () => (isDrawing_idx = null);
+        this.canvas.mouseout = () => (isDrawing_idx = null);
     }
     mode_free() {
         this.path = [];
@@ -107,10 +126,10 @@ class SVGpath {
         let lastY = 0;
         this.ctx.lineCap = 'round';
         this.ctx.lineJoin = 'round';
+        this.ctx.lineWidth = this.lineWidth || 5;
         const drawLine = e => {
             if (!isDrawing) return;
             this.ctx.beginPath();
-            this.ctx.lineWidth = this.lineWidth || 5;
             this.ctx.moveTo(lastX, lastY);
             this.ctx.lineTo(e.offsetX, e.offsetY);
             this.ctx.stroke();
@@ -126,6 +145,15 @@ class SVGpath {
         this.canvas.onmousemove = throttle(drawLine, 50, 60);
         this.canvas.onmouseup = () => (isDrawing = false);
         this.canvas.mouseout = () => (isDrawing = false);
+    }
+    add_arc(x, y, r, sa, ea, counterclockwise, color) {
+        this.ctx.beginPath()
+        this.ctx.fillStyle = color
+        this.ctx.arc(x, y, r, sa, ea, counterclockwise);
+        this.ctx.fill()
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = 'black';
+        this.ctx.stroke();
     }
     clear() {
         this.path = [];
