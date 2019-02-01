@@ -32,6 +32,10 @@ opt =
 }
 ```
 Want to know other usage,pls read code. 
+Execute command 'npm run watch' and open test/index.html with browser to run test code.
 :yum:
 
 ###### 有两种模式供选择 自由模式和连线模式
+
+###### 
+
