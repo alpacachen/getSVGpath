@@ -19,6 +19,10 @@ opt =
     y: 'y-coordinate',
     width: 'modal width',
     height: 'nodal height',
+    default:{
+        data:Object,
+        mode:String
+    }
     onSure: function(res){
         // res = {
         //   data:Array,
