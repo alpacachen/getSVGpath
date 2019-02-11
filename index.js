@@ -6,16 +6,20 @@ class SVGpath {
         this.width = opt.width;
         this.height = opt.height;
         this.opacity = opt.opacity || 0.8;
-        this.path = [];
+        this.path = (opt.default && opt.default.data) || [];
         this.onSure = opt.onSure;
         this.canvas = null;
         this.ctx = null;
         this.div = null;
-        this.mode = 'free';
+        this.mode = (opt.default && opt.default.mode) || 'free';
     }
     draw() {
         this.render();
-        this.mode_free();
+        if (this.mode === 'free') {
+            this.mode_free();
+        } else if (this.mode === 'line') {
+            this.mode_line();
+        }
     }
     render() {
         this.div = document.createElement('div');
@@ -38,7 +42,7 @@ class SVGpath {
         this.canvas = document.getElementById('SVGpath_Canvas');
         this.ctx = this.canvas.getContext('2d');
         document.getElementById('SVGpath_sure').onclick = () => {
-            this.onSure({ data: this.path, baseWidth: this.width });
+            this.onSure({ data: this.path, baseWidth: this.width, mode: this.mode });
             document.body.removeChild(this.div);
         };
         document.getElementById('SVGpath_cancel').onclick = () => {
@@ -56,7 +60,6 @@ class SVGpath {
         };
     }
     mode_line() {
-        this.path = [];
         let isDrawing_idx = null;
         this.ctx.lineWidth = 3;
         const findq = (x, y) => {
@@ -95,13 +98,13 @@ class SVGpath {
                 }
             }
         };
+        draw_lines();
         this.canvas.onmousedown = e => {
             const inq = findq(e.offsetX, e.offsetY);
             if (inq !== null) {
                 isDrawing_idx = inq;
                 return;
             }
-            // [lastX, lastY] = [e.offsetX, e.offsetY];
             this.path.push([e.offsetX, e.offsetY]);
             if (this.path.length > 1) {
                 let len = this.path.length;
@@ -132,31 +135,35 @@ class SVGpath {
         this.canvas.mouseout = () => (isDrawing_idx = null);
     }
     mode_free() {
-        this.path = [];
         let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
         this.ctx.lineCap = 'round';
         this.ctx.lineJoin = 'round';
         this.ctx.lineWidth = this.lineWidth || 5;
-        const drawLine = e => {
-            if (!isDrawing) return;
+        const drawLine = () => {
             this.ctx.beginPath();
-            this.ctx.moveTo(lastX, lastY);
-            this.ctx.lineTo(e.offsetX, e.offsetY);
+            for (let i = 0; i < this.path.length; i++) {
+                this.ctx.lineTo(this.path[i][0], this.path[i][1]);
+            }
             this.ctx.stroke();
-            [lastX, lastY] = [e.offsetX, e.offsetY];
-            this.path.push([e.offsetX, e.offsetY]);
         };
         this.ctx.strokeStyle = '#666666';
         this.canvas.onmousedown = e => {
             isDrawing = true;
-            [lastX, lastY] = [e.offsetX, e.offsetY];
             this.path.push([e.offsetX, e.offsetY]);
         };
-        this.canvas.onmousemove = throttle(drawLine, 50, 60);
+        this.canvas.onmousemove = throttle(
+            e => {
+                if (!isDrawing) return;
+                this.path.push([e.offsetX, e.offsetY]);
+                this.ctx.clearRect(0, 0, this.width, this.height);
+                drawLine();
+            },
+            50,
+            60
+        );
         this.canvas.onmouseup = () => (isDrawing = false);
         this.canvas.mouseout = () => (isDrawing = false);
+        drawLine();
     }
     add_arc(x, y, r, sa, ea, counterclockwise, color) {
         this.ctx.beginPath();
