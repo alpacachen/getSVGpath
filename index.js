@@ -26,7 +26,7 @@ class SVGpath {
         this.div.innerHTML = `
             <div id='SVGpath_wrap' style="position:absolute;top:${this.y}px;left:${this.x}px;width:${this.width}px;height:${
             this.height
-        }px;box-shadow: 0 0 10px #000;background: #fff;opacity:${this.opacity};border-radius: 4px;z-index: 1;">
+            }px;box-shadow: 0 0 10px #000;background: #fff;opacity:${this.opacity};border-radius: 4px;z-index: 1;">
                 <canvas id="SVGpath_Canvas" width=${this.width} height=${this.height}></canvas>
                 <div style="text-align: right;position: relative;top: -28px;padding: 0 8px;">
                     <button id="SVGpath_cancel">cancel</button>
@@ -60,23 +60,58 @@ class SVGpath {
         };
     }
     mode_line() {
+        // q中点   e起点
         let isDrawing_idx = null;
+        let isDrawing_e_idx = null
         this.ctx.lineWidth = 3;
-        const findq = (x, y) => {
-            let idx = null;
+        const findIdx = (x, y) => {
+            let idx = {};
             this.path.forEach((item, index) => {
+                let tx = item[0]
+                let ty = item[1]
+                if (x < tx + 15 && x > tx - 15 && y < ty + 15 && y > ty - 15) {
+                    idx = { index, type: 'e' }
+                    return
+                }
                 if (!item[2]) {
                     return;
-                }
-                const ix = item[2][0];
-                const iy = item[2][1];
-                if (x < ix + 5 && x > ix - 5 && y < iy + 5 && y > iy - 5) {
-                    idx = index;
+                } else {
+                    const ix = item[2][0];
+                    const iy = item[2][1];
+                    if (x < ix + 15 && x > ix - 15 && y < iy + 15 && y > iy - 15) {
+                        idx = { index, type: 'q' }
+                    }
                 }
             });
             return idx;
         };
+        const move_e = e => {
+            const idx = findIdx(e.offsetX, e.offsetY); // 判断鼠标在哪点上
+            if (idx.index) {
+                document.body.style.cursor = 'pointer';
+            } else {
+                document.body.style.cursor = '';
+            }
+            if (isDrawing_e_idx !== null) {
+                this.path[isDrawing_e_idx][0] = e.offsetX
+                this.path[isDrawing_e_idx][1] = e.offsetY
+                draw_lines();
+            }
+        }
+        const move_q = e => {
+            const idx = findIdx(e.offsetX, e.offsetY); // 判断鼠标在哪点上
+            if (idx.index) {
+                document.body.style.cursor = 'pointer';
+            } else {
+                document.body.style.cursor = '';
+            }
+            if (isDrawing_idx !== null) {
+                this.path[isDrawing_idx][2] = [e.offsetX, e.offsetY]
+                draw_lines();
+            }
+        }
         const draw_lines = () => {
+            this.ctx.clearRect(0, 0, this.width, this.height);
             this.ctx.beginPath();
             for (let i = 0; i < this.path.length; i++) {
                 //原点
@@ -97,12 +132,18 @@ class SVGpath {
                     this.ctx.setLineDash([]);
                 }
             }
-        };
+        }
         draw_lines();
         this.canvas.onmousedown = e => {
-            const inq = findq(e.offsetX, e.offsetY);
-            if (inq !== null) {
-                isDrawing_idx = inq;
+            const idx = findIdx(e.offsetX, e.offsetY);
+            if (idx.type === 'q') {
+                isDrawing_idx = idx.index;
+                this.canvas.onmousemove = move_q
+                return;
+            }
+            if (idx.type === 'e') {
+                isDrawing_e_idx = idx.index;
+                this.canvas.onmousemove = move_e
                 return;
             }
             this.path.push([e.offsetX, e.offsetY]);
@@ -114,25 +155,9 @@ class SVGpath {
             }
             draw_lines();
         };
-        this.canvas.onmousemove = throttle(
-            e => {
-                const idx = findq(e.offsetX, e.offsetY); // 判断鼠标在哪个中点上
-                if (idx !== null) {
-                    document.body.style.cursor = 'pointer';
-                } else {
-                    document.body.style.cursor = 'default';
-                }
-                if (isDrawing_idx !== null) {
-                    this.path[isDrawing_idx].splice(2, 1, [e.offsetX, e.offsetY]);
-                    this.ctx.clearRect(0, 0, this.width, this.height);
-                    draw_lines();
-                }
-            },
-            70,
-            80
-        );
-        this.canvas.onmouseup = () => (isDrawing_idx = null);
-        this.canvas.mouseout = () => (isDrawing_idx = null);
+        this.canvas.onmousemove = null
+        this.canvas.onmouseup = () => { isDrawing_idx = null; isDrawing_e_idx = null };
+        this.canvas.mouseout = () => { isDrawing_idx = null; isDrawing_e_idx = null };
     }
     mode_free() {
         let isDrawing = false;
@@ -194,10 +219,10 @@ class SVGpath {
 }
 
 //节流函数，此处用来快速画直线
-const throttle = function(fn, delay, mustRunDelay) {
+const throttle = function (fn, delay, mustRunDelay) {
     let timer = null;
     let t_start;
-    return function() {
+    return function () {
         let context = this,
             args = arguments,
             t_curr = +new Date();
@@ -209,7 +234,7 @@ const throttle = function(fn, delay, mustRunDelay) {
             fn.apply(context, args);
             t_start = t_curr;
         } else {
-            timer = setTimeout(function() {
+            timer = setTimeout(function () {
                 fn.apply(context, args);
             }, delay);
         }
