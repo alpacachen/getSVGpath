@@ -5,7 +5,7 @@ class SVGpath {
         this.lineWidth = opt.lineWidth;
         this.width = opt.width;
         this.height = opt.height;
-        this.opacity = opt.opacity || 0.8;
+        this.opacity = opt.opacity || 0.4;
         this.path = (opt.default && opt.default.data) || [];
         this.onSure = opt.onSure;
         this.canvas = null;
@@ -26,15 +26,17 @@ class SVGpath {
         this.div.innerHTML = `
             <div id='SVGpath_wrap' style="position:absolute;top:${this.y}px;left:${this.x}px;width:${this.width}px;height:${
             this.height
-            }px;box-shadow: 0 0 10px #000;background: #fff;opacity:${this.opacity};border-radius: 4px;z-index: 1;">
+            }px;background: rgba(0,0,0,${this.opacity});z-index: 1;">
                 <canvas id="SVGpath_Canvas" width=${this.width} height=${this.height}></canvas>
-                <div style="text-align: right;position: relative;top: -28px;padding: 0 8px;">
-                    <button id="SVGpath_cancel">cancel</button>
-                    <button id="SVGpath_sure">sure</button>
-                </div>
-                <div style="top: -28px;position: absolute;top: -12px;right: 0;">
-                    <button id="SVGpath_free">free mode</button>
-                    <button id="SVGpath_line">line mode</button>
+                <div style="font-size:16px;padding: 4px;background: rgba(0,0,0,.4);border-radius: 4px;position: absolute;top: 10px;width: 95%;box-sizing: border-box;left: 0;right: 0;margin: auto;display: flex;justify-content: space-between;">
+                    <div id="optioncon" style="color:#FFFFFF">
+                        <input id="SVGpath_free" style="margin:0 4px;" type="radio" name="mode" value="free" ${this.mode === 'free' ? 'checked' : ''} />free  
+                        <input id="SVGpath_line" style="margin:0 4px;" type="radio" name="mode" value="line" ${this.mode === 'line' ? 'checked' : ''} />line
+                    </div>
+                    <div>
+                        <button style="border-radius:4px;border:0;color:#B2B2B2;background:rgba(0,0,0,.6);" id="SVGpath_cancel">cancel</button>
+                        <button style="border-radius:4px;border:0;color:#B2B2B2;background:rgba(0,0,0,.6);" id="SVGpath_sure">sure</button>
+                    </div>
                 </div>
             </div>
         `;
@@ -160,10 +162,11 @@ class SVGpath {
         this.canvas.mouseout = () => { isDrawing_idx = null; isDrawing_e_idx = null };
     }
     mode_free() {
+        document.body.style.cursor = 'crosshair';
         let isDrawing = false;
         this.ctx.lineCap = 'round';
         this.ctx.lineJoin = 'round';
-        this.ctx.lineWidth = this.lineWidth || 5;
+        this.ctx.lineWidth = this.lineWidth || 3;
         const drawLine = () => {
             this.ctx.beginPath();
             for (let i = 0; i < this.path.length; i++) {
@@ -171,7 +174,7 @@ class SVGpath {
             }
             this.ctx.stroke();
         };
-        this.ctx.strokeStyle = '#666666';
+        this.ctx.strokeStyle = '#ffffff';
         this.canvas.onmousedown = e => {
             isDrawing = true;
             this.path.push([e.offsetX, e.offsetY]);
@@ -196,11 +199,11 @@ class SVGpath {
         this.ctx.arc(x, y, r, sa, ea, counterclockwise);
         this.ctx.fill();
         this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = 'black';
         this.ctx.stroke();
     }
     add_line(sx, sy, ex, ey) {
         this.ctx.beginPath();
+        this.ctx.strokeStyle = '#ffffff'
         this.ctx.moveTo(sx, sy);
         this.ctx.lineTo(ex, ey);
         this.ctx.stroke();
@@ -215,6 +218,19 @@ class SVGpath {
     }
     cmode(mode) {
         this.mode = mode;
+        if (mode === 'free') {
+            document.body.style.cursor = 'crosshair';
+        } else {
+            document.body.style.cursor = '';
+        }
+    }
+    close() {
+        try {
+            document.body.removeChild(this.div);
+            document.body.style.cursor = '';
+        } catch (e) {
+            console.warn('是不是已经关闭了？');
+        }
     }
 }
 
