@@ -42,4 +42,4 @@ Execute command 'npm run watch' and open test/index.html with browser to run tes
 ###### 有两种模式供选择 自由模式和连线模式
 
 ###### 
-
+[更多详细介绍请点这里～～](http://blog.ipalfish.com/?p=708)
